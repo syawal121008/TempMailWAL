@@ -196,17 +196,19 @@ export function App() {
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#060910] py-6 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
         <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5">
-            <span>© {new Date().getFullYear()} Syawal TempMail.</span>
-            <span>Untuk</span>
+          <div className="flex items-center gap-2 flex-wrap justify-center">
+            <span className="font-bold text-slate-800 dark:text-slate-200">TempMailWAL</span>
+            <span>•</span>
+            <span className="font-semibold text-orange-600 dark:text-orange-400">Powered By SyawalTzy</span>
+            <span>•</span>
             <a
               href="https://syawaltzy.biz.id"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-orange-600 dark:text-orange-400 font-semibold hover:underline inline-flex items-center gap-0.5"
+              className="hover:underline inline-flex items-center gap-0.5 text-slate-600 dark:text-slate-300"
             >
               syawaltzy.biz.id
-              <ExternalLink className="w-3 h-3" />
+              <ExternalLink className="w-3 h-3 text-orange-500" />
             </a>
           </div>
 
