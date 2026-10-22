@@ -1,17 +1,16 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Header } from "./components/Header";
 import { AddressCard } from "./components/AddressCard";
 import { InboxList } from "./components/InboxList";
-import { MessageModal } from "./components/MessageModal";
+import { MessageDetailView } from "./components/MessageDetailView";
 import { InfoSection } from "./components/InfoSection";
 import { useInbox } from "./hooks/useInbox";
 import { MessageSummary } from "./types";
 import { playNotificationChime } from "./lib/sound";
 import { showToast, showConfirmDialog, showAlert } from "./lib/swal";
-import { Heart, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 export function App() {
-  // Theme state: dark or light
   const [isDark, setIsDark] = useState<boolean>(() => {
     const saved = localStorage.getItem("theme");
     return saved ? saved === "dark" : true;
@@ -19,6 +18,7 @@ export function App() {
 
   const [selectedMessage, setSelectedMessage] = useState<MessageSummary | null>(null);
   const [copiedOtpId, setCopiedOtpId] = useState<string | null>(null);
+  const contentSectionRef = useRef<HTMLDivElement>(null);
 
   // Sync theme with HTML root class
   useEffect(() => {
@@ -39,10 +39,7 @@ export function App() {
   // Real-time notification when a new email arrives
   const handleNewMessage = useCallback((msg: MessageSummary) => {
     playNotificationChime();
-    showToast(
-      "success",
-      `Email baru dari: ${msg.from_name || msg.sender}`
-    );
+    showToast("success", `Email baru dari: ${msg.from_name || msg.sender}`);
   }, []);
 
   const {
@@ -78,6 +75,7 @@ export function App() {
 
   const handleGenerate = async (durationMinutes?: number) => {
     try {
+      setSelectedMessage(null);
       const newSession = await generateNewInbox(durationMinutes);
       showToast("success", `Alamat baru dibuat: ${newSession.address}`);
     } catch {
@@ -95,6 +93,7 @@ export function App() {
     );
 
     if (confirmed) {
+      setSelectedMessage(null);
       await deleteCurrentInbox();
       showToast("info", "Kotak masuk telah dihapus.");
     }
@@ -117,7 +116,17 @@ export function App() {
 
     if (confirmed) {
       removeMessage(messageId);
+      if (selectedMessage?.id === messageId) {
+        setSelectedMessage(null);
+      }
       showToast("info", "Pesan telah dihapus.");
+    }
+  };
+
+  const handleSelectMessage = (msg: MessageSummary) => {
+    setSelectedMessage(msg);
+    if (contentSectionRef.current) {
+      contentSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
@@ -175,18 +184,29 @@ export function App() {
           />
         </section>
 
-        {/* Gmail-Style Inbox List */}
-        <section>
-          <InboxList
-            messages={messages}
-            loading={loading}
-            refreshing={refreshing}
-            onSelectMessage={(msg) => setSelectedMessage(msg)}
-            onDeleteMessage={handleDeleteMessage}
-            onCopyOtp={handleCopyOtp}
-            onManualRefresh={handleRefresh}
-            copiedOtpId={copiedOtpId}
-          />
+        {/* Inline Email Reading View OR Gmail-Style Inbox List (No Popups!) */}
+        <section ref={contentSectionRef} className="scroll-mt-20">
+          {selectedMessage && session ? (
+            <MessageDetailView
+              messageSummary={selectedMessage}
+              token={session.token}
+              onBack={() => setSelectedMessage(null)}
+              onDelete={(id) => handleDeleteMessage(id)}
+              onCopyOtp={handleCopyOtp}
+              copiedOtpId={copiedOtpId}
+            />
+          ) : (
+            <InboxList
+              messages={messages}
+              loading={loading}
+              refreshing={refreshing}
+              onSelectMessage={handleSelectMessage}
+              onDeleteMessage={handleDeleteMessage}
+              onCopyOtp={handleCopyOtp}
+              onManualRefresh={handleRefresh}
+              copiedOtpId={copiedOtpId}
+            />
+          )}
         </section>
 
         {/* Informational Section */}
@@ -217,18 +237,6 @@ export function App() {
           </div>
         </div>
       </footer>
-
-      {/* Gmail-Style Email Reading Modal */}
-      {selectedMessage && session && (
-        <MessageModal
-          messageSummary={selectedMessage}
-          token={session.token}
-          onClose={() => setSelectedMessage(null)}
-          onDelete={(id) => handleDeleteMessage(id)}
-          onCopyOtp={(otp) => handleCopyOtp(otp)}
-          copiedOtpId={copiedOtpId}
-        />
-      )}
     </div>
   );
 }
