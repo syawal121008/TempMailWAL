@@ -1,0 +1,31 @@
+{
+  "name": "syawal-tempmail-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Syawal TempMail - Disposable Email Service on Cloudflare Workers & React",
+  "workspaces": [
+    "apps/*",
+    "workers/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=syawal-tempmail-web",
+    "dev:api": "npm run dev --workspace=syawal-tempmail-api",
+    "build:web": "npm run build --workspace=syawal-tempmail-web",
+    "build:api": "npm run build --workspace=syawal-tempmail-api",
+    "test:web": "npm run test --workspace=syawal-tempmail-web",
+    "test:api": "npm run test --workspace=syawal-tempmail-api",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces"
+  },
+  "keywords": [
+    "tempmail",
+    "cloudflare-workers",
+    "cloudflare-d1",
+    "email-routing",
+    "react",
+    "vite",
+    "tailwind"
+  ],
+  "author": "Syawal",
+  "license": "MIT"
+}

@@ -1,0 +1,20 @@
+name = "syawal-tempmail-api"
+main = "src/index.ts"
+compatibility_date = "2024-10-22"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ALLOWED_ORIGIN = "https://syawaltzy.my.id,http://localhost:5173"
+DEFAULT_EXPIRATION_MINUTES = 10
+MAX_EXPIRATION_MINUTES = 60
+EMAIL_DOMAIN = "syawaltzy.my.id"
+MAX_EMAIL_SIZE_BYTES = 5242880 # 5 MB
+
+[[d1_databases]]
+binding = "DB"
+database_name = "syawal-tempmail-db"
+database_id = "YOUR_CLOUDFLARE_D1_DATABASE_ID" # Diisi setelah 'wrangler d1 create syawal-tempmail-db'
+
+# Scheduled cleanup task running every 10 minutes
+[triggers]
+crons = ["*/10 * * * *"]

@@ -1,0 +1,611 @@
+# MASTER IMPLEMENTATION PROMPT — SYAWAL TEMPMAIL
+ 
+## 1. PERAN DAN MISI
+ 
+Bertindak sebagai Senior Full-Stack Engineer, Cloudflare Workers Engineer, React.js Developer, Security Engineer, dan UI/UX Designer.
+ 
+Tugasmu adalah membangun fondasi aplikasi layanan disposable email atau Temp Mail bernama **Syawal TempMail** yang benar-benar berfungsi, aman, responsif, dan siap dikembangkan menjadi layanan publik.
+ 
+Jangan hanya membuat mockup, prototype statis, atau demo dengan pesan email palsu. Implementasikan frontend, backend, database, pemrosesan email masuk, API, validasi, pengamanan, pengujian, dan dokumentasi deployment.
+ 
+Prioritaskan implementasi bertahap, kode yang bersih, pemisahan tanggung jawab, keamanan, dan kompatibilitas dengan layanan hosting yang ditentukan.
+ 
+Jika kamu memiliki akses ke repository atau terminal, periksa struktur dan kondisi proyek terlebih dahulu. Pertahankan konfigurasi yang masih valid dan jangan menghapus pekerjaan yang sudah ada tanpa alasan teknis yang jelas.
+ 
+Jika belum ada proyek, buat struktur proyek lengkap dari awal.
+ 
+Jangan mengklaim sesuatu sudah berhasil di-deploy, menerima email, atau lolos pengujian sebelum benar-benar diverifikasi.
+ 
+***
+ 
+## 2. KONDISI INFRASTRUKTUR SAAT INI
+ 
+Domain proyek:
+ 
+- Domain Temp Mail: `syawaltzy.my.id`
+- Domain utama pemilik yang harus tetap terpisah: `syawaltzy.biz.id`
+- Frontend hosting: Vercel
+- DNS dan pengelolaan domain: Cloudflare
+- Cloudflare Email Routing: sudah diaktifkan melalui dashboard
+- Nameserver: sudah diarahkan ke Cloudflare
+- Kondisi DNS saat ini: record DNS masih perlu diperiksa dan dikonfigurasi sesuai kebutuhan.
+- Repository GitHub: belum ditentukan, periksa apakah sudah tersedia.
+- API dan database: belum diasumsikan sudah dibuat.
+
+ 
+PENTING: `syawaltzy.my.id` adalah domain untuk Temp Mail. Jangan mengubah, menghapus, atau mengganggu konfigurasi `syawaltzy.biz.id`.
+ 
+Jangan menganggap DNS dan Email Routing sudah berfungsi hanya karena fiturnya telah diaktifkan di dashboard.
+ 
+Periksa status konfigurasi dan tuliskan langkah yang masih diperlukan.
+ 
+Jangan membuat atau mengubah DNS secara otomatis jika tidak memiliki akses dan izin yang sesuai.
+ 
+Jangan mengarang nilai MX, TXT, A, atau CNAME. Ambil nilai persis dari dashboard Cloudflare atau Vercel ketika konfigurasi dilakukan.
+ 
+Jika DNS belum tersedia atau belum aktif, lanjutkan pengerjaan kode menggunakan URL development atau URL deployment sementara.
+ 
+***
+ 
+## 3. ARSITEKTUR TEKNOLOGI
+ 
+Gunakan pembagian berikut:
+ 
+### A. Frontend
+ 
+- React.js
+- Vite
+- TypeScript
+- Tailwind CSS
+- Lucide React untuk ikon
+- Fetch API atau client HTTP ringan
+- Vercel untuk hosting frontend
+
+ 
+Frontend bertanggung jawab atas tampilan, pembuatan dan pengelolaan inbox pengguna, countdown, tampilan pesan, serta komunikasi dengan API.
+ 
+Jangan menyimpan email secara permanen hanya di React state atau localStorage.
+ 
+### B. Backend API dan penerima email
+ 
+Gunakan Cloudflare Workers dengan TypeScript.
+ 
+Buat Worker yang memiliki dua tanggung jawab:
+ 
+1. HTTP API untuk membuat inbox, mengambil pesan, menghapus inbox, dan mengelola sesi pengguna.
+2. Email handler yang memproses email masuk menggunakan mekanisme Email Workers Cloudflare.
+
+ 
+Gunakan worker bindings yang tepat dan pisahkan modul API HTTP dengan pemrosesan email agar pemeliharaan kode mudah.
+ 
+### C. Database dan penyimpanan
+ 
+Gunakan Cloudflare D1 untuk data terstruktur, misalnya:
+ 
+- Inbox dan alamat email.
+- Hash token akses.
+- Waktu pembuatan dan kedaluwarsa.
+- Metadata email.
+- Status pesan.
+- Identitas inbox pemilik pesan.
+
+ 
+Jika diperlukan untuk email mentah atau lampiran, evaluasi Cloudflare R2 sebagai penyimpanan tambahan.
+ 
+Jangan menyimpan lampiran tanpa batas. Batasi ukuran pesan, tipe lampiran, total penggunaan storage, dan retensi data.
+ 
+### D. Infrastruktur
+ 
+- Frontend: Vercel.
+- DNS dan domain: Cloudflare.
+- Backend: Cloudflare Workers.
+- Database: Cloudflare D1.
+- Penyimpanan pesan atau file opsional: Cloudflare R2.
+
+ 
+Frontend, HTTP API, dan Email Worker harus berkomunikasi menggunakan kontrak API yang terdokumentasi.
+ 
+Jangan berasumsi bahwa Vercel secara otomatis dapat menerima email masuk hanya dengan menambahkan domain.
+ 
+***
+ 
+## 4. DESAIN DAN FITUR FRONTEND
+ 
+Bangun UI/UX Temp Mail yang modern, minimalis, premium, dan responsif.
+ 
+Target utama pengguna adalah perangkat mobile, tetapi website juga harus nyaman digunakan di tablet dan desktop.
+ 
+Gunakan nama produk Syawal TempMail.
+ 
+### Halaman utama
+ 
+Tampilkan:
+ 
+- Logo dan nama Syawal TempMail.
+- Deskripsi singkat tentang email sementara.
+- Tombol Generate Email.
+- Alamat email aktif yang jelas.
+- Tombol Copy Address.
+- Tombol Refresh Inbox.
+- Tombol Generate New Address.
+- Countdown waktu kedaluwarsa.
+- Indikator status koneksi.
+- Daftar email masuk.
+- Empty state yang informatif.
+- Pengaturan masa aktif inbox jika diizinkan.
+- Tombol untuk menghapus inbox.
+- Informasi privasi dan batasan penggunaan.
+
+ 
+Contoh tampilan alamat:
+ 
+`k8x2p9m4@syawaltzy.my.id`
+ 
+Alamat tersebut hanya contoh format dan tidak boleh dianggap sebagai inbox aktif.
+ 
+### Kotak masuk
+ 
+Setiap pesan harus menampilkan:
+ 
+- Nama atau alamat pengirim.
+- Subjek email.
+- Waktu pesan diterima.
+- Ringkasan teks.
+- Indikator pesan baru.
+- Tampilan detail pesan ketika diklik.
+- Tombol salin kode OTP jika kode berhasil dikenali.
+- Tombol hapus pesan jika didukung API.
+
+ 
+Gunakan polling yang wajar atau mekanisme pembaruan lain yang kompatibel dengan infrastrukturnya.
+ 
+Jangan melakukan polling terlalu agresif. Hentikan atau kurangi polling ketika tab tidak aktif.
+ 
+### Tampilan detail email
+ 
+Utamakan konten teks biasa.
+ 
+Jika konten HTML email ditampilkan, sanitasi terlebih dahulu menggunakan pendekatan yang aman. Jangan menggunakan raw HTML tanpa sanitasi, jangan menjalankan script dari pesan email, dan jangan memuat gambar eksternal secara otomatis.
+ 
+Header email dan informasi teknis boleh ditampilkan pada bagian detail opsional.
+ 
+### Desain visual
+ 
+Gunakan:
+ 
+- Dark mode sebagai pilihan utama desain awal.
+- Warna netral gelap dengan aksen ungu atau biru.
+- Tipografi yang jelas.
+- Layout dengan hierarki visual yang baik.
+- Animasi ringan dan tidak mengganggu.
+- Loading skeleton.
+- Toast untuk operasi berhasil atau gagal.
+- Empty state, error state, dan status offline.
+- Tombol yang memiliki label aksesibel.
+- Kontras teks yang layak.
+- Mobile-first responsive layout.
+
+ 
+Hindari desain yang terlalu ramai, efek berlebihan, dan ketergantungan pada animasi.
+ 
+Buat navigasi minimal, misalnya Beranda, Cara Kerja, Privasi, dan FAQ.
+ 
+Jangan menyisipkan alamat email atau pesan simulasi ke dalam inbox produksi.
+ 
+***
+ 
+## 5. ATURAN PEMBUATAN EMAIL SEMENTARA
+ 
+Pengguna dapat membuat alamat email acak pada domain:
+ 
+`@syawaltzy.my.id`
+ 
+Contoh:
+ 
+- `k8x2p9m4@syawaltzy.my.id`
+- `m4q7z2n8@syawaltzy.my.id`
+- `x9p3k6r2@syawaltzy.my.id`
+
+ 
+Gunakan generator acak yang aman secara kriptografis, seperti Web Crypto API.
+ 
+Persyaratan:
+ 
+1. Pastikan alamat yang dihasilkan unik.
+2. Validasi alamat di sisi server.
+3. Simpan status aktif dan waktu kedaluwarsa di database.
+4. Jangan menerima email untuk inbox yang sudah tidak ada atau kedaluwarsa.
+5. Jangan menganggap alamat yang dibuat oleh frontend otomatis valid.
+6. Terapkan perlindungan terhadap pembuatan inbox secara massal.
+7. Tetapkan batas inbox aktif dan batas penggunaan berdasarkan konfigurasi.
+8. Jangan menjanjikan jumlah email atau kapasitas yang belum didukung infrastrukturnya.
+
+ 
+Masa aktif awal yang disarankan adalah 10 menit, tetapi nilainya harus dapat diatur melalui konfigurasi server.
+ 
+Jika pengguna memilih masa aktif lain, server tetap harus memvalidasi batas yang diperbolehkan.
+ 
+Penghapusan kedaluwarsa harus ditangani oleh backend atau scheduled cleanup, bukan hanya mengandalkan countdown frontend.
+ 
+***
+ 
+## 6. PENERIMAAN EMAIL SESUNGGUHNYA
+ 
+Implementasikan penerimaan email masuk melalui Cloudflare Email Routing dan Email Worker.
+ 
+Jangan mengimplementasikan pengiriman email keluar atau SMTP server publik.
+ 
+Alur yang diharapkan:
+ 
+1. Pengguna meminta pembuatan inbox melalui HTTP API.
+2. API membuat local-part acak dan menyimpan record inbox di D1.
+3. API memberikan alamat email dan token akses rahasia kepada browser.
+4. Pengirim eksternal mengirim email ke alamat yang diberikan.
+5. Konfigurasi Email Routing meneruskan email yang sesuai ke Email Worker.
+6. Worker membaca penerima email dari envelope yang sebenarnya, bukan mempercayai header teks yang dapat dipalsukan.
+7. Worker memeriksa apakah alamat penerima mempunyai inbox yang masih aktif.
+8. Worker memproses MIME email menggunakan parser yang terpelihara dan sesuai untuk lingkungan Workers, contohnya PostalMime.
+9. Worker menyimpan metadata dan konten pesan dalam database atau storage yang sesuai.
+10. Inbox pengguna mengambil pesan melalui HTTP API yang terautentikasi.
+11. Email dan metadata dihapus mengikuti kebijakan retensi.
+
+ 
+Terapkan validasi ukuran pesan sebelum memproses atau menyimpan email. Jika batas ukuran dilampaui, tolak atau buang pesan dengan penanganan yang aman.
+ 
+Jangan menerima lampiran berukuran tak terbatas.
+ 
+Pastikan pemrosesan email tetap aman terhadap pesan MIME yang malformed, header tidak valid, konten terlalu besar, dan percobaan penyalahgunaan.
+ 
+### Routing dan DNS
+ 
+Periksa dokumentasi terbaru Cloudflare mengenai konfigurasi Email Routing dan Email Workers.
+ 
+Periksa apakah domain sudah memiliki record MX dan TXT yang dibutuhkan.
+ 
+Jika belum tersedia, jelaskan langkah untuk memperbaikinya melalui dashboard Cloudflare.
+ 
+Jangan menganggap aktivasi Email Routing berarti email otomatis masuk ke Worker.
+ 
+Jelaskan cara mengatur aturan routing agar alamat email sementara dapat diproses oleh Worker yang benar.
+ 
+Jika implementasi menggunakan catch-all, pastikan Worker memeriksa penerima dan membuang email untuk inbox yang tidak dikenal atau kedaluwarsa.
+ 
+Jangan mengarang tujuan MX, TXT, atau aturan routing.
+ 
+***
+ 
+## 7. DESAIN API
+ 
+Implementasikan API versi pertama dengan struktur rute yang konsisten.
+ 
+Contoh kontrak yang diharapkan:
+ 
+- `POST /api/v1/inboxes` — membuat inbox.
+- `GET /api/v1/inboxes/me` — melihat inbox milik sesi saat ini.
+- `GET /api/v1/inboxes/me/messages` — mengambil daftar pesan.
+- `GET /api/v1/inboxes/me/messages/:messageId` — membaca detail pesan.
+- `DELETE /api/v1/inboxes/me/messages/:messageId` — menghapus pesan jika didukung.
+- `DELETE /api/v1/inboxes/me` — menghapus inbox dan mengakhiri sesi.
+- `GET /api/v1/health` — memeriksa kesehatan API tanpa mengungkap informasi sensitif.
+
+ 
+Ini adalah contoh desain kontrak; implementasikan dan dokumentasikan kontrak final secara konsisten.
+ 
+API harus menyediakan:
+ 
+- Validasi input.
+- Validasi autentikasi.
+- Respons HTTP yang benar.
+- Format JSON yang konsisten.
+- Penanganan kesalahan.
+- Batas ukuran request.
+- CORS terbatas untuk origin yang diizinkan.
+- Rate limiting.
+- Pagination atau batas jumlah pesan per halaman.
+- Pembatasan akses berdasarkan kepemilikan inbox.
+
+ 
+Jangan membuat endpoint publik yang memungkinkan seseorang membaca inbox hanya dengan mengetahui alamat emailnya.
+ 
+***
+ 
+## 8. KEAMANAN WAJIB
+ 
+Keamanan adalah persyaratan implementasi, bukan fitur tambahan.
+ 
+### Autentikasi inbox
+ 
+Gunakan token akses acak yang tidak mudah ditebak.
+ 
+Token harus:
+ 
+- Dibuat menggunakan generator kriptografis.
+- Diberikan kepada pemilik inbox ketika inbox dibuat.
+- Disimpan dalam bentuk hash di server apabila memungkinkan.
+- Diperiksa pada setiap permintaan yang mengakses inbox.
+- Tidak dimasukkan ke URL, query string, atau log.
+- Tidak dapat digunakan untuk mengakses inbox pengguna lain.
+
+ 
+Frontend boleh menyimpan sesi inbox pada penyimpanan browser yang sesuai, tetapi jangan menyimpan konten email secara permanen di localStorage.
+ 
+Jangan mengklaim localStorage sepenuhnya aman terhadap XSS. Terapkan pencegahan XSS terlebih dahulu dan dokumentasikan risiko sesi browser.
+ 
+### Perlindungan API
+ 
+Terapkan:
+ 
+- Rate limit pembuatan inbox.
+- Rate limit pengambilan pesan.
+- Pembatasan asal CORS.
+- Validasi `Origin` sesuai kebutuhan dan jangan menjadikannya satu-satunya autentikasi.
+- Validasi setiap parameter.
+- Prepared statements untuk D1.
+- Pembatasan request body.
+- Penanganan error tanpa kebocoran stack trace.
+- Pengamanan terhadap IDOR.
+- Kebijakan retensi dan penghapusan pesan.
+- Perlindungan terhadap abuse dan spam.
+
+ 
+Gunakan Cloudflare Turnstile sebagai opsi yang dapat diaktifkan apabila memang dibutuhkan, dengan validasi token di sisi server.
+ 
+Jangan menyimpan secret atau API key di kode frontend, repository publik, atau file konfigurasi yang di-commit.
+ 
+Gunakan konfigurasi secret dan environment binding sesuai platform.
+ 
+### Kebijakan email
+ 
+Layanan ini hanya menerima dan menampilkan email masuk.
+ 
+Jangan menyediakan relay SMTP publik, spoofing pengirim, ataupun fitur pengiriman massal.
+ 
+Tampilkan peringatan bahwa inbox bersifat sementara dan tidak cocok untuk akun penting, pemulihan akun utama, atau menyimpan data sensitif.
+ 
+Implementasikan penanganan email berbahaya dengan aman.
+ 
+***
+ 
+## 9. OTP PARSER
+ 
+Buat fungsi pendeteksi OTP yang membantu pengguna menemukan kode dari email.
+ 
+Persyaratan:
+ 
+- Prioritaskan teks yang relevan seperti "verification code", "OTP", atau "one-time code".
+- Deteksi pola angka dengan panjang yang dapat dikonfigurasi.
+- Jangan menganggap setiap angka pada email merupakan OTP.
+- Tampilkan kode sebagai saran yang dapat dikoreksi pengguna.
+- Sediakan fungsi copy kode.
+- Jangan mengirim pesan email ke AI eksternal hanya untuk mendeteksi kode.
+- Jangan mengeksekusi konten email.
+- Jangan membuat klaim bahwa setiap OTP pasti bisa dikenali dengan benar.
+
+ 
+Tambahkan unit test untuk berbagai format email.
+ 
+***
+ 
+## 10. STRUKTUR PROYEK
+ 
+Gunakan monorepo yang sederhana dan jelas, misalnya:
+ 
+```text
+syawal-tempmail/
+├── apps/
+│   └── web/
+│       ├── src/
+│       │   ├── components/
+│       │   ├── pages/
+│       │   ├── hooks/
+│       │   ├── lib/
+│       │   ├── services/
+│       │   ├── types/
+│       │   └── styles/
+│       ├── public/
+│       └── package.json
+├── workers/
+│   └── api/
+│       ├── src/
+│       │   ├── handlers/
+│       │   ├── email/
+│       │   ├── routes/
+│       │   ├── services/
+│       │   ├── security/
+│       │   ├── db/
+│       │   └── index.ts
+│       ├── migrations/
+│       ├── package.json
+│       └── wrangler.toml
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── CLOUDFLARE_SETUP.md
+│   ├── VERCEL_SETUP.md
+│   ├── SECURITY.md
+│   └── TESTING.md
+├── .gitignore
+├── README.md
+└── package.json
+```
+ 
+Struktur tersebut merupakan acuan. Sesuaikan dengan framework dan konfigurasi yang benar-benar dipakai.
+ 
+Jangan membuat file kosong hanya untuk memenuhi struktur.
+ 
+Pastikan seluruh import, script, dependency, migration, dan konfigurasi saling sesuai.
+ 
+Jika Cloudflare sudah menyediakan konfigurasi yang berbeda dengan contoh ini, prioritaskan konfigurasi resmi yang bekerja.
+ 
+***
+ 
+## 11. ENVIRONMENT DAN SECRET
+ 
+Pisahkan konfigurasi frontend dan backend.
+ 
+Gunakan contoh placeholder yang aman di dokumentasi.
+ 
+Frontend membutuhkan base URL API yang dapat dikonfigurasi, misalnya:
+ 
+`VITE_API_BASE_URL`
+ 
+Backend menggunakan environment binding untuk kebutuhan seperti:
+ 
+- Database D1.
+- Bucket R2 jika digunakan.
+- Origin frontend yang diizinkan.
+- Batas masa aktif inbox.
+- Batas jumlah pesan dan ukuran pesan.
+- Konfigurasi rate limit atau mekanisme abuse prevention.
+
+ 
+Jangan memasukkan password, token, private key, atau credential nyata ke dalam contoh file.
+ 
+Jangan mengekspos secret backend melalui variabel `VITE_*`.
+ 
+Jangan meminta pengguna mengirim secret ke percakapan. Gunakan placeholder dan jelaskan lokasi konfigurasi rahasianya.
+ 
+***
+ 
+## 12. DATABASE DAN RETENSI
+ 
+Buat migration SQL yang eksplisit dan dapat dijalankan ulang dengan prosedur migrasi yang benar.
+ 
+Desain tabel minimal untuk:
+ 
+- inboxes
+- messages
+- indeks yang dibutuhkan
+- kolom kepemilikan inbox
+- waktu pembuatan dan kedaluwarsa
+- identitas pesan yang diperlukan untuk mencegah duplikasi
+
+ 
+Pilih tipe data dan relasi secara konsisten.
+ 
+Gunakan foreign key dan indeks yang sesuai.
+ 
+Jangan menyimpan raw email tanpa batas.
+ 
+Buat mekanisme cleanup untuk inbox kedaluwarsa, pesan kedaluwarsa, dan file terkait jika ada.
+ 
+Dokumentasikan bahwa penghapusan fisik dari D1 dan R2 memiliki proses dan batasan operasional yang harus diverifikasi.
+ 
+***
+ 
+## 13. TESTING DAN VALIDASI
+ 
+Buat unit test serta integration test yang mencakup:
+ 
+1. Inbox berhasil dibuat.
+2. Token yang valid dapat mengakses inbox.
+3. Token yang salah ditolak.
+4. Pengguna A tidak dapat mengakses inbox pengguna B.
+5. Inbox kedaluwarsa tidak dapat diakses.
+6. Email untuk alamat yang tidak dikenal dibuang atau ditolak.
+7. Email valid disimpan.
+8. Pesan tidak dapat diambil melewati batas ukuran dan pagination.
+9. Konten HTML berbahaya tidak dieksekusi.
+10. OTP parser mengenali format umum dengan benar.
+11. Rate limiting berfungsi.
+12. Cleanup menghapus data yang melewati retensi.
+13. API menangani error dengan respons yang benar.
+14. Frontend memiliki loading, empty, success, dan error states.
+15. Build production frontend dan Worker berhasil.
+
+ 
+Gunakan mock untuk menguji email masuk saat lingkungan email sungguhan belum tersedia.
+ 
+Namun, bedakan dengan jelas antara tes simulasi, pengujian lokal, dan pengujian integrasi email eksternal.
+ 
+Jangan mengklaim email sudah dapat diterima dari internet sampai pengujian end-to-end benar-benar berhasil.
+ 
+***
+ 
+## 14. PROSES IMPLEMENTASI BERTAHAP
+ 
+Kerjakan urutan berikut:
+ 
+### Fase 1 — Audit
+ 
+- Periksa repository dan tools yang tersedia.
+- Konfirmasi framework dan dependency yang ada.
+- Periksa konfigurasi Cloudflare dan Vercel yang telah tersedia jika memiliki akses.
+- Identifikasi hal yang belum bisa diverifikasi.
+- Buat rencana implementasi yang konkret.
+
+ 
+### Fase 2 — Fondasi proyek
+ 
+- Buat struktur proyek.
+- Setup React, Vite, TypeScript, Tailwind, dan linting.
+- Setup Cloudflare Worker dan D1.
+- Buat schema database dan migration.
+- Buat konfigurasi environment.
+- Dokumentasikan perintah instalasi dan development.
+
+ 
+### Fase 3 — Frontend
+ 
+- Implementasikan halaman utama dan komponen UI.
+- Implementasikan generator inbox melalui API.
+- Implementasikan copy address, countdown, refresh, daftar pesan, dan detail pesan.
+- Tambahkan loading dan error handling.
+- Jangan menggunakan inbox palsu ketika production API belum tersedia.
+
+ 
+### Fase 4 — Backend
+ 
+- Implementasikan API yang terdokumentasi.
+- Terapkan token akses dan kepemilikan inbox.
+- Terapkan validasi, rate limiting, dan CORS.
+- Implementasikan pembuatan inbox dan pengambilan pesan.
+- Implementasikan cleanup dan retensi data.
+
+ 
+### Fase 5 — Email Worker
+ 
+- Implementasikan event handler email.
+- Parsing MIME.
+- Validasi penerima inbox.
+- Validasi ukuran pesan.
+- Penyimpanan pesan di D1 atau R2.
+- Pembuangan pesan yang tidak sesuai.
+- Tambahkan logging tanpa menyimpan token, OTP, atau isi email sensitif ke log.
+
+ 
+### Fase 6 — Verifikasi DNS
+ 
+- Jelaskan proses pengecekan DNS Cloudflare.
+- Verifikasi konfigurasi Email Routing.
+- Jelaskan cara membuat atau memeriksa rule untuk Email Worker.
+- Pastikan root domain tetap dapat digunakan untuk website.
+- Jelaskan proses menambahkan custom domain ke Vercel.
+- Ambil nilai DNS persis dari dashboard dan jangan menebak record.
+- Jangan menghapus MX yang dikelola Email Routing untuk memperbaiki deployment website.
+
+ 
+### Fase 7 — Pengujian
+ 
+- Jalankan lint.
+- Jalankan type check.
+- Jalankan unit test.
+- Jalankan build frontend.
+- Jalankan build atau validasi Worker.
+- Perbaiki error yang ditemukan.
+- Dokumentasikan tes yang tidak bisa dijalankan dan alasannya.
+
+ 
+### Fase 8 — Dokumentasi deployment
+ 
+Sediakan panduan langkah demi langkah untuk:
+ 
+- GitHub.
+- Vercel.
+- Cloudflare Workers.
+- D1 dan R2 jika digunakan.
+- Environment variables.
+- DNS website.
+- DNS Email Routing.
+- Email Worker routing.
+- Pengujian email nyata.
+- Troubleshoot
