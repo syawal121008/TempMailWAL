@@ -4,26 +4,28 @@
 
 @layer base {
   body {
-    background-color: #090d16;
-    color: #f1f5f9;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 }
 
-/* Glassmorphism card utilities */
-.glass-panel {
-  background: rgba(17, 24, 39, 0.75);
+/* Glassmorphism & Panel Styles */
+.glass-panel-dark {
+  background: rgba(18, 24, 38, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.glass-panel-glow {
-  background: rgba(17, 24, 39, 0.85);
+.glass-panel-light {
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(99, 102, 241, 0.25);
-  box-shadow: 0 0 35px -8px rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+.glow-orange {
+  box-shadow: 0 0 30px -5px rgba(249, 115, 22, 0.25);
 }
 
 /* Custom Scrollbar */
@@ -33,14 +35,23 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: transparent;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1f2937;
+  background: #cbd5e1;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #374151;
+  background: #94a3b8;
 }

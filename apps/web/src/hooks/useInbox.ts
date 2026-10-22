@@ -10,7 +10,11 @@ import {
 
 const STORAGE_KEY = "syawal_tempmail_session";
 
-export function useInbox() {
+interface UseInboxOptions {
+  onNewMessage?: (msg: MessageSummary) => void;
+}
+
+export function useInbox(options?: UseInboxOptions) {
   const [session, setSession] = useState<InboxSession | null>(null);
   const [messages, setMessages] = useState<MessageSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -18,6 +22,8 @@ export function useInbox() {
   const [error, setError] = useState<string | null>(null);
 
   const isTabVisibleRef = useRef(true);
+  const knownMessageIdsRef = useRef<Set<string>>(new Set());
+  const isInitialFetchRef = useRef(true);
 
   // Restore session from sessionStorage on initial load
   useEffect(() => {
@@ -27,14 +33,12 @@ export function useInbox() {
         const parsed: InboxSession = JSON.parse(saved);
         if (parsed.expires_at > Date.now()) {
           setSession(parsed);
-          // Verify with server
           getMyInboxApi(parsed.token)
             .then((verified) => {
               setSession(verified);
               sessionStorage.setItem(STORAGE_KEY, JSON.stringify(verified));
             })
             .catch(() => {
-              // Expired or invalid on server
               sessionStorage.removeItem(STORAGE_KEY);
               setSession(null);
             });
@@ -49,26 +53,44 @@ export function useInbox() {
   }, []);
 
   // Fetch messages helper
-  const fetchMessages = useCallback(async (token: string, silent = false) => {
-    if (!silent) setRefreshing(true);
-    try {
-      const data = await getMessagesApi(token);
-      setMessages(data.messages);
-      setError(null);
-    } catch (err: unknown) {
-      if (!silent) {
-        setError(err instanceof Error ? err.message : "Gagal memuat pesan");
-      }
-    } finally {
-      if (!silent) setRefreshing(false);
-    }
-  }, []);
+  const fetchMessages = useCallback(
+    async (token: string, silent = false) => {
+      if (!silent) setRefreshing(true);
+      try {
+        const data = await getMessagesApi(token);
+        const incomingMessages = data.messages;
 
-  // Handle Visibility Change to conserve bandwidth and prevent aggressive polling
+        // Check if there are newly received emails (not present in known set)
+        if (!isInitialFetchRef.current && options?.onNewMessage) {
+          for (const msg of incomingMessages) {
+            if (!knownMessageIdsRef.current.has(msg.id)) {
+              options.onNewMessage(msg);
+              break; // Trigger notification
+            }
+          }
+        }
+
+        // Update known IDs
+        incomingMessages.forEach((m) => knownMessageIdsRef.current.add(m.id));
+        isInitialFetchRef.current = false;
+
+        setMessages(incomingMessages);
+        setError(null);
+      } catch (err: unknown) {
+        if (!silent) {
+          setError(err instanceof Error ? err.message : "Gagal memuat pesan");
+        }
+      } finally {
+        if (!silent) setRefreshing(false);
+      }
+    },
+    [options]
+  );
+
+  // Handle Visibility Change
   useEffect(() => {
     const handleVisibilityChange = () => {
       isTabVisibleRef.current = document.visibilityState === "visible";
-      // If returning to tab, immediately fetch
       if (isTabVisibleRef.current && session) {
         fetchMessages(session.token, true);
       }
@@ -78,19 +100,21 @@ export function useInbox() {
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [session, fetchMessages]);
 
-  // Polling interval
+  // Realtime Polling Interval: 2.5 seconds
   useEffect(() => {
     if (!session) return;
 
-    // Fetch immediately on session start
+    // Reset known IDs when session changes
+    knownMessageIdsRef.current.clear();
+    isInitialFetchRef.current = true;
+
     fetchMessages(session.token, true);
 
     const interval = setInterval(() => {
-      // Only poll if tab is active and inbox not expired
       if (isTabVisibleRef.current && session.expires_at > Date.now()) {
         fetchMessages(session.token, true);
       }
-    }, 5000); // Poll every 5s
+    }, 2500); // Snappy real-time polling every 2.5s
 
     return () => clearInterval(interval);
   }, [session, fetchMessages]);
@@ -103,6 +127,8 @@ export function useInbox() {
       const newSession = await createInboxApi(durationMinutes);
       setSession(newSession);
       setMessages([]);
+      knownMessageIdsRef.current.clear();
+      isInitialFetchRef.current = true;
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(newSession));
       return newSession;
     } catch (err: unknown) {
@@ -125,18 +151,23 @@ export function useInbox() {
       sessionStorage.removeItem(STORAGE_KEY);
       setSession(null);
       setMessages([]);
+      knownMessageIdsRef.current.clear();
       setLoading(false);
     }
   }, [session]);
 
   // Delete single message
-  const removeMessage = useCallback(async (messageId: string) => {
-    if (!session) return;
-    const ok = await deleteMessageApi(session.token, messageId);
-    if (ok) {
-      setMessages((prev) => prev.filter((m) => m.id !== messageId));
-    }
-  }, [session]);
+  const removeMessage = useCallback(
+    async (messageId: string) => {
+      if (!session) return;
+      const ok = await deleteMessageApi(session.token, messageId);
+      if (ok) {
+        setMessages((prev) => prev.filter((m) => m.id !== messageId));
+        knownMessageIdsRef.current.delete(messageId);
+      }
+    },
+    [session]
+  );
 
   // Manual refresh
   const manualRefresh = useCallback(() => {
