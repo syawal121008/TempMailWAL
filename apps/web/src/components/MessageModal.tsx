@@ -253,13 +253,8 @@ export const MessageModal: React.FC<MessageModalProps> = ({
           )}
         </div>
 
-        {/* Bottom Footer Actions (Gmail style) */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-[#0c1017] flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>Pesan diverifikasi aman</span>
-          </div>
-
+        {/* Bottom Footer Actions */}
+        <div className="p-3.5 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-[#0c1017] flex items-center justify-end">
           <button
             onClick={() => {
               onDelete(messageSummary.id);

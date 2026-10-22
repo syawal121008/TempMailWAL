@@ -160,11 +160,11 @@ export const InboxList: React.FC<InboxListProps> = ({
             <div className="absolute inset-0 rounded-full border border-orange-500/30 animate-ping pointer-events-none" />
           </div>
 
-          <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg mb-1.5">
-            Kotak Masuk Kosong
+          <h3 className="font-bold text-slate-800 dark:text-slate-200 text-base mb-1">
+            Belum Ada Email
           </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md leading-relaxed">
-            Menunggu email masuk... Kirim email atau kode OTP dari Gmail Anda ke alamat di atas. Pesan akan langsung muncul seketika secara realtime!
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
+            Menunggu pesan masuk. Kirim email atau kode OTP ke alamat di atas untuk melihatnya di sini.
           </p>
         </div>
       ) : filteredMessages.length === 0 ? (

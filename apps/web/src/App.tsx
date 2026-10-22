@@ -81,15 +81,15 @@ export function App() {
       const newSession = await generateNewInbox(durationMinutes);
       showToast("success", `Alamat baru dibuat: ${newSession.address}`);
     } catch {
-      showAlert("Gagal Membuat Alamat", "Terjadi kendala saat menghubungi server Cloudflare.", "error");
+      showAlert("Gagal Membuat Alamat", "Terjadi kendala saat membuat alamat baru.", "error");
     }
   };
 
   const handleDeleteInbox = async () => {
     const confirmed = await showConfirmDialog(
       "Hapus Kotak Masuk?",
-      "Seluruh email dan sesi inbox ini akan dihapus secara permanen dari server Cloudflare.",
-      "Ya, Hapus Sekarang",
+      "Semua email di kotak masuk ini akan langsung dihapus.",
+      "Ya, Hapus",
       "Batal",
       true
     );
@@ -109,7 +109,7 @@ export function App() {
     if (e) e.stopPropagation();
     const confirmed = await showConfirmDialog(
       "Hapus Pesan?",
-      "Apakah Anda yakin ingin menghapus pesan ini?",
+      "Pesan ini akan dihapus.",
       "Hapus",
       "Batal",
       true
@@ -160,7 +160,7 @@ export function App() {
               Kotak Masuk Sementara
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              Gunakan email ini untuk menjaga privasi Anda dan menerima kode verifikasi secara realtime.
+              Gunakan email ini untuk terima pesan atau kode verifikasi tanpa ribet.
             </p>
           </div>
 
@@ -189,18 +189,16 @@ export function App() {
           />
         </section>
 
-        {/* Informational & FAQ Section */}
+        {/* Informational Section */}
         <InfoSection />
       </main>
 
-      {/* Footer with branding syawaltzy.biz.id */}
-      <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#060910] py-8 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
-        <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      {/* Footer */}
+      <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#060910] py-6 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
+        <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
             <span>© {new Date().getFullYear()} Syawal TempMail.</span>
-            <span>Dibuat dengan</span>
-            <Heart className="w-3.5 h-3.5 text-orange-500 fill-orange-500 inline" />
-            <span>untuk</span>
+            <span>Untuk</span>
             <a
               href="https://syawaltzy.biz.id"
               target="_blank"
@@ -212,10 +210,8 @@ export function App() {
             </a>
           </div>
 
-          <div className="flex items-center gap-4 text-[11px] text-slate-400 dark:text-slate-500 font-mono">
-            <span>Domain: syawaltzy.my.id</span>
-            <span>•</span>
-            <span>Cloudflare Edge + D1</span>
+          <div className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
+            syawaltzy.my.id
           </div>
         </div>
       </footer>
