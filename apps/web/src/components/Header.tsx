@@ -14,22 +14,23 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleTheme,
 }) => {
   return (
-    <header className="w-full border-b sticky top-0 z-40 transition-colors duration-200 border-slate-200 dark:border-slate-800/80 bg-white/85 dark:bg-[#0b0f17]/85 backdrop-blur-md">
+    <header className="w-full border-b sticky top-0 z-40 transition-colors duration-200 border-slate-200 dark:border-slate-800/80 bg-white/90 dark:bg-[#0b0f17]/90 backdrop-blur-md">
       <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Brand with Image Logo */}
+        {/* Brand with Adaptive Light/Dark Mode Logo */}
         <div className="flex items-center gap-3">
           <img
-            src="/logo.jpg"
+            src={isDark ? "/logo_dark.jpg" : "/logo_light.jpg"}
             alt="TempMailWAL Logo"
-            className="w-10 h-10 rounded-xl object-cover shadow-md shadow-orange-500/20 border border-orange-500/30"
+            key={isDark ? "dark-logo" : "light-logo"}
+            className="w-10 h-10 rounded-xl object-cover shadow-sm transition-all duration-300 border border-slate-200 dark:border-slate-700/60"
           />
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white">
+              <span className="font-extrabold text-base sm:text-lg tracking-tight text-slate-900 dark:text-white">
                 TempMailWAL
               </span>
             </div>
-            <p className="text-[11px] font-medium text-orange-600 dark:text-orange-400">
+            <p className="text-[11px] font-semibold text-orange-600 dark:text-orange-400">
               Powered By SyawalTzy
             </p>
           </div>
@@ -66,6 +67,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onToggleTheme}
             aria-label="Ganti Tema"
             className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200 dark:border-slate-700/60"
+            title={isDark ? "Beralih ke Mode Terang" : "Beralih ke Mode Gelap"}
           >
             {isDark ? (
               <Sun className="w-4 h-4 text-orange-400" />
