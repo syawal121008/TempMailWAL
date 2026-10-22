@@ -13,7 +13,7 @@ MAX_EMAIL_SIZE_BYTES = 5242880 # 5 MB
 [[d1_databases]]
 binding = "DB"
 database_name = "syawal-tempmail-db"
-database_id = "YOUR_CLOUDFLARE_D1_DATABASE_ID" # Diisi setelah 'wrangler d1 create syawal-tempmail-db'
+database_id = "8d237a9f-3c5f-483c-880c-dcdce5a68553"
 
 # Scheduled cleanup task running every 10 minutes
 [triggers]
