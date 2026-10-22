@@ -4,24 +4,23 @@ import { AddressCard } from "./components/AddressCard";
 import { InboxList } from "./components/InboxList";
 import { MessageModal } from "./components/MessageModal";
 import { InfoSection } from "./components/InfoSection";
-import { ToastContainer } from "./components/Toast";
 import { useInbox } from "./hooks/useInbox";
-import { MessageSummary, ToastMessage } from "./types";
+import { MessageSummary } from "./types";
 import { playNotificationChime } from "./lib/sound";
+import { showToast, showConfirmDialog, showAlert } from "./lib/swal";
 import { Heart, ExternalLink } from "lucide-react";
 
 export function App() {
   // Theme state: dark or light
   const [isDark, setIsDark] = useState<boolean>(() => {
     const saved = localStorage.getItem("theme");
-    return saved ? saved === "dark" : true; // Default dark
+    return saved ? saved === "dark" : true;
   });
 
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<MessageSummary | null>(null);
   const [copiedOtpId, setCopiedOtpId] = useState<string | null>(null);
 
-  // Sync theme with HTML class
+  // Sync theme with HTML root class
   useEffect(() => {
     const root = document.documentElement;
     if (isDark) {
@@ -37,25 +36,14 @@ export function App() {
     setIsDark((prev) => !prev);
   };
 
-  const addToast = useCallback((type: "success" | "error" | "info", text: string) => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, type, text }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
+  // Real-time notification when a new email arrives
+  const handleNewMessage = useCallback((msg: MessageSummary) => {
+    playNotificationChime();
+    showToast(
+      "success",
+      `Email baru dari: ${msg.from_name || msg.sender}`
+    );
   }, []);
-
-  // Callback when a brand new email arrives via real-time polling
-  const handleNewMessage = useCallback(
-    (msg: MessageSummary) => {
-      playNotificationChime();
-      addToast(
-        "success",
-        `Email baru masuk dari: ${msg.from_name || msg.sender}!`
-      );
-    },
-    [addToast]
-  );
 
   const {
     session,
@@ -77,46 +65,60 @@ export function App() {
   }, [loading, session, error, generateNewInbox]);
 
   const handleCopyAddress = (address: string) => {
-    addToast("success", `Alamat ${address} berhasil disalin!`);
+    showToast("success", `Alamat ${address} berhasil disalin!`);
   };
 
   const handleCopyOtp = (otp: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     navigator.clipboard.writeText(otp);
     setCopiedOtpId(otp);
-    addToast("success", `Kode OTP ${otp} berhasil disalin!`);
+    showToast("success", `Kode OTP ${otp} berhasil disalin!`);
     setTimeout(() => setCopiedOtpId(null), 2500);
   };
 
   const handleGenerate = async (durationMinutes?: number) => {
     try {
       const newSession = await generateNewInbox(durationMinutes);
-      addToast("success", `Alamat baru dibuat: ${newSession.address}`);
+      showToast("success", `Alamat baru dibuat: ${newSession.address}`);
     } catch {
-      addToast("error", "Gagal membuat alamat baru");
+      showAlert("Gagal Membuat Alamat", "Terjadi kendala saat menghubungi server Cloudflare.", "error");
     }
   };
 
   const handleDeleteInbox = async () => {
-    if (
-      window.confirm(
-        "Apakah Anda yakin ingin menghapus inbox ini? Semua pesan akan dihapus permanen."
-      )
-    ) {
+    const confirmed = await showConfirmDialog(
+      "Hapus Kotak Masuk?",
+      "Seluruh email dan sesi inbox ini akan dihapus secara permanen dari server Cloudflare.",
+      "Ya, Hapus Sekarang",
+      "Batal",
+      true
+    );
+
+    if (confirmed) {
       await deleteCurrentInbox();
-      addToast("info", "Inbox berhasil dihapus.");
+      showToast("info", "Kotak masuk telah dihapus.");
     }
   };
 
   const handleRefresh = () => {
     manualRefresh();
-    addToast("info", "Kotak masuk diperbarui.");
+    showToast("info", "Kotak masuk diperbarui.");
   };
 
-  const handleDeleteMessage = (messageId: string, e?: React.MouseEvent) => {
+  const handleDeleteMessage = async (messageId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    removeMessage(messageId);
-    addToast("info", "Pesan telah dihapus.");
+    const confirmed = await showConfirmDialog(
+      "Hapus Pesan?",
+      "Apakah Anda yakin ingin menghapus pesan ini?",
+      "Hapus",
+      "Batal",
+      true
+    );
+
+    if (confirmed) {
+      removeMessage(messageId);
+      showToast("info", "Pesan telah dihapus.");
+    }
   };
 
   const scrollToSection = (sectionId: string) => {
@@ -136,9 +138,9 @@ export function App() {
         isConnected={!error}
       />
 
-      {/* Main Content */}
+      {/* Main Content Container */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-8 sm:py-10 flex flex-col gap-8">
-        {/* Error notification */}
+        {/* Error notification banner if API down */}
         {error && (
           <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-sm flex items-center justify-between">
             <span>{error}</span>
@@ -191,7 +193,7 @@ export function App() {
         <InfoSection />
       </main>
 
-      {/* Footer with personal branding syawaltzy.biz.id */}
+      {/* Footer with branding syawaltzy.biz.id */}
       <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#060910] py-8 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
         <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-1.5">
@@ -229,12 +231,6 @@ export function App() {
           copiedOtpId={copiedOtpId}
         />
       )}
-
-      {/* Floating Toast Notification Container */}
-      <ToastContainer
-        toasts={toasts}
-        onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))}
-      />
     </div>
   );
 }
