@@ -12,7 +12,8 @@ export function getCorsHeaders(request: Request, env: Env): HeadersInit {
   } else if (
     origin.startsWith("http://localhost:") ||
     origin.startsWith("http://127.0.0.1:") ||
-    origin.endsWith(".vercel.app")
+    origin.endsWith(".vercel.app") ||
+    origin.includes("syawaltzy.my.id")
   ) {
     allowOrigin = origin;
   }

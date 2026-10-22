@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:match*",
+      "destination": "https://syawal-tempmail-api.zakiyahgalon.workers.dev/api/:match*"
+    }
+  ]
+}
